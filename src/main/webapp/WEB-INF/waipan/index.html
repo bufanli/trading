@@ -1,0 +1,214 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>无标题文档</title>
+    <script src="https://cdn.bootcss.com/jquery/3.4.0/jquery.min.js"></script>
+    <!--bootstrap-->
+    <link href="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <!--fontawesome-->
+    <script src="https://cdn.bootcss.com/font-awesome/5.8.1/js/all.min.js"></script>
+    <!--bootstrap-table-->
+    <link href="https://cdn.bootcss.com/bootstrap-table/1.14.2/bootstrap-table.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/bootstrap-table/1.14.2/bootstrap-table.min.js"></script>
+    <!--bootstrap-table-lanuage-->
+    <script src="https://cdn.bootcss.com/bootstrap-table/1.14.2/bootstrap-table-locale-all.min.js"></script>
+    <!--bootstrap-table-export-->
+    <script src="https://cdn.bootcss.com/bootstrap-table/1.14.2/extensions/export/bootstrap-table-export.min.js"></script>
+    <!--在客户端保存生成的导出文件-->
+    <script src="https://cdn.bootcss.com/FileSaver.js/2014-11-29/FileSaver.min.js"></script>
+    <!--以XLSX（Excel 2007+ XML格式）格式导出表（SheetJS）-->
+    <script src="https://cdn.bootcss.com/xlsx/0.14.2/xlsx.core.min.js"></script>
+    <!--以PNG格式导出表格-->
+    <!--对于IE支持包括 html2canvas 之前的 es6-promise-->
+    <script src="https://cdn.bootcss.com/es6-promise/4.1.1/es6-promise.auto.min.js"></script>
+    <script src="https://cdn.bootcss.com/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+    <!--将表导出为PDF文件-->
+    <script src="https://unpkg.com/tableexport.jquery.plugin/libs/jsPDF/jspdf.min.js"></script>
+    <script src="https://unpkg.com/tableexport.jquery.plugin/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
+    <!--无论期望的格式如何，最后都包含 tableexport.jquery.plugin（不是tableexport）-->
+    <script src="https://unpkg.com/tableexport.jquery.plugin/tableExport.min.js"></script>
+    <script>
+        var cjmxColumns = [
+            {field: 'qhgsmc', title: '期货公司名称', sortable: true},
+            {field: 'wsmc', title: '我司名称', sortable: true},
+            {field: 'qhgszh', title: '期货公司账号', sortable: true},
+            {field: 'cjrq', title: '成交日期', sortable: true},
+            {field: 'pzhynr', title: '品种合约内容', sortable: true},
+            {field: 'hydqr', title: '合约到期日', sortable: true},
+            {field: 'buy', title: '买', sortable: true},
+            {field: 'sell', title: '卖', sortable: true},
+            {field: 'cjj', title: '成交价', sortable: true},
+            {field: 'jsj', title: '结算价', sortable: true},
+            {field: 'ccyk', title: '持仓盈亏', sortable: true},
+            {field: 'hz', title: '货值', sortable: true},
+            {field: 'bz', title: '币种', sortable: true}
+        ];
+        var cchzColumns = [
+            {field: 'qhgsmc', title: '期货公司名称', sortable: true},
+            {field: 'wsmc', title: '我司名称', sortable: true},
+            {field: 'qhgszh', title: '期货公司账号', sortable: true},
+            {field: 'jys', title: '交易所', sortable: true},
+            {field: 'pzhynr', title: '品种合约内容', sortable: true},
+            {field: 'hydqr', title: '合约到期日', sortable: true},
+            {field: 'buy', title: '买', sortable: true},
+            {field: 'sell', title: '卖', sortable: true},
+            {field: 'cjjj', title: '成交均价', sortable: true},
+            {field: 'jsj', title: '结算价', sortable: true},
+            {field: 'ccyk', title: '持仓盈亏', sortable: true},
+            {field: 'hz', title: '货值', sortable: true},
+            {field: 'jjbzj', title: '基本保证金', sortable: true},
+            {field: 'bz', title: '币种', sortable: true}
+        ];
+        var zjColumns = [
+            {field: 'qhgsmc', title: '期货公司名称', sortable: true},
+            {field: 'wsmc', title: '我司名称', sortable: true},
+            {field: 'qhgszh', title: '期货公司账号', sortable: true},
+            {field: 'lx', title: '类型', sortable: true},
+            {field: 'value', title: '值', sortable: true}
+        ];
+        $(function () {
+            var now = new Date().Format("yyyy-MM-dd");
+            $("#upload").click(function () {
+                var formData = new FormData($('#uploadForm')[0]);
+                $.ajax({
+                    type: 'post',
+                    url: "/jiaoyishi/waipan/upload",
+                    data: formData,
+                    cache: false,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        console.log(data.data);
+                        var mydata = eval('(' + data.data + ')');
+                        console.log(mydata);
+                        $('#cjmx').bootstrapTable('destroy').bootstrapTable({
+                            data: mydata.cjmx,
+                            pagination: false,//显示分页
+                            clickToSelect: true,//单击列表选中
+                            toolbar: "#toolbar",//显示工具栏
+                            showToggle: false,//工具栏上显示列表模式切换
+                            showExport: false,//工具栏上显示导出按钮
+                            height: 500,
+                            width:600,
+                            //exportDataType: $(this).val(),//显示导出范围
+                            exportTypes: [ 'xlsx'],//导出格式
+                            exportOptions: {//导出设置
+                                fileName: '计算结果'//下载文件名称
+                            },
+                            columns: cjmxColumns
+                        });
+                        $('#cchz').bootstrapTable('destroy').bootstrapTable({
+                            data: mydata.cchz,
+                            pagination: false,//显示分页
+                            clickToSelect: true,//单击列表选中
+                            toolbar: "#toolbar",//显示工具栏
+                            showToggle: false,//工具栏上显示列表模式切换
+                            showExport: false,//工具栏上显示导出按钮
+                            height: 500,
+                            width:600,
+                            //exportDataType: $(this).val(),//显示导出范围
+                            exportTypes: [ 'xlsx'],//导出格式
+                            exportOptions: {//导出设置
+                                fileName: '计算结果'//下载文件名称
+                            },
+                            columns: cchzColumns
+                        });
+                        $('#zj').bootstrapTable('destroy').bootstrapTable({
+                            data: mydata.zj,
+                            pagination: false,//显示分页
+                            clickToSelect: true,//单击列表选中
+                            toolbar: "#toolbar",//显示工具栏
+                            showToggle: false,//工具栏上显示列表模式切换
+                            showExport: false,//工具栏上显示导出按钮
+                            height: 500,
+                            width:600,
+                            //exportDataType: $(this).val(),//显示导出范围
+                            exportTypes: [ 'xlsx'],//导出格式
+                            exportOptions: {//导出设置
+                                fileName: '计算结果'//下载文件名称
+                            },
+                            columns: zjColumns
+                        });
+                    },
+                    error: function () {
+                        alert("上传失败");
+                    }
+                });
+            });
+        });
+        Date.prototype.Format = function (fmt) { // author: meizz
+            var o = {
+                "M+": this.getMonth() + 1, // 月份
+                "d+": this.getDate(), // 日
+                "h+": this.getHours(), // 小时
+                "m+": this.getMinutes(), // 分
+                "s+": this.getSeconds(), // 秒
+                "q+": Math.floor((this.getMonth() + 3) / 3), // 季度
+                "S": this.getMilliseconds() // 毫秒
+            };
+            if (/(y+)/.test(fmt))
+                fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        }
+        // 自定义按钮导出数据
+        function exportData(id){
+            $('#'+id).tableExport({
+                type: 'excel',
+                exportDataType: "all",
+                ignoreColumn: [0],//忽略某一列的索引
+                fileName: id,//下载文件名称
+                onCellHtmlData: function (cell, row, col, data){//处理导出内容,自定义某一行、某一列、某个单元格的内容
+                    console.info(data);
+                    return data;
+                }
+            });
+        }
+    </script>
+    <style>
+        html, body {
+            height: 100%;
+            overflow: auto;
+        }
+
+        body {
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+<form id="uploadForm" enctype="multipart/form-data" style="margin-left: 30%">
+    <input type="file" name="file" multiple="multiple"/>
+</form>
+<br>
+<button id="upload" type="button" class="btn btn-primary" style="margin-left: 30%">上传文件</button>
+<hr>
+    <div class="card" style="top: 10px;width: 100%;"><h5 class="card-header">成交明细</h5>
+        <div class="card-body">
+            <button type="button" onclick="exportData('cjmx')" class="btn btn-mini btn-info">导出</button>
+            <table id="cjmx">
+            </table>
+        </div>
+    </div>
+    <div class="card" style="top: 10px;width: 100%;"><h5 class="card-header">持仓汇总</h5>
+        <div class="card-body">
+            <button type="button" onclick="exportData('cchz')" class="btn btn-mini btn-info">导出</button>
+            <table id="cchz">
+            </table>
+        </div>
+    </div>
+    <div class="card" style="top: 10px;width: 100%;"><h5 class="card-header">资金</h5>
+        <div class="card-body">
+            <button type="button" onclick="exportData('zj')" class="btn btn-mini btn-info">导出</button>
+            <table id="zj">
+            </table>
+        </div>
+    </div>
+</body>
+</html>
