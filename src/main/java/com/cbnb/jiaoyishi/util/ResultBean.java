@@ -7,42 +7,42 @@ package com.cbnb.jiaoyishi.util;
  */
 public class ResultBean {
 
-	private String type;
+    private String type;
 
-	private String titles;
+    private String titles;
 
-	private String data;
+    private String data;
 
-	@Override
-	public String toString() {
-		return "{" +
-				"'type':'" + type + "'" +
-				", 'titles':'" + titles + "'" +
-				", 'data':'" + data + "'" +
-				"}";
-	}
+    @Override
+    public String toString() {
+        return "{" +
+                "'type':'" + type + "'" +
+                ", 'titles':'" + titles + "'" +
+                ", 'data':'" + data + "'" +
+                "}";
+    }
 
-	public String getType() {
-		return type;
-	}
+    public String getType() {
+        return type;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public void setType(String type) {
+        this.type = type;
+    }
 
-	public String getTitles() {
-		return titles;
-	}
+    public String getTitles() {
+        return titles;
+    }
 
-	public void setTitles(String titles) {
-		this.titles = titles;
-	}
+    public void setTitles(String titles) {
+        this.titles = titles;
+    }
 
-	public String getData() {
-		return data;
-	}
+    public String getData() {
+        return data;
+    }
 
-	public void setData(String data) {
-		this.data = data;
-	}
+    public void setData(String data) {
+        this.data = data;
+    }
 }

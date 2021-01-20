@@ -13,7 +13,7 @@
        http://www.springframework.org/schema/task
        http://www.springframework.org/schema/task/spring-task-3.2.xsd ">
     <!--定时任务扫描-->
-    <task:annotation-driven />
+    <task:annotation-driven/>
     <!-- 扫描web相关的bean -->
     <context:component-scan base-package="com"/>
 
@@ -32,8 +32,8 @@
     <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
     <mvc:resources mapping="/swagger/**" location="/WEB-INF/swagger/" cache-period="31556926"/>
     <mvc:resources mapping="/waipan/**" location="/WEB-INF/waipan/" cache-period="31556928"/>
-    <mvc:default-servlet-handler />
-    <bean class="com.cbnb.jiaoyishi.config.SwaggerConfig" />
+    <mvc:default-servlet-handler/>
+    <bean class="com.cbnb.jiaoyishi.config.SwaggerConfig"/>
     <!--下面配置拦截器，暂时用不到-->
     <!--<mvc:interceptors>
         <mvc:interceptor>

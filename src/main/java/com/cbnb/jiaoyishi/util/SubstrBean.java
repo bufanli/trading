@@ -6,33 +6,33 @@ package com.cbnb.jiaoyishi.util;
  * @Date: Create in 13:14 2020/12/23
  */
 public class SubstrBean {
-	private String title;
+    private String title;
 
-	private int begin;
+    private int begin;
 
-	private int end;
+    private int end;
 
-	public String getTitle() {
-		return title;
-	}
+    public String getTitle() {
+        return title;
+    }
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-	public int getBegin() {
-		return begin;
-	}
+    public int getBegin() {
+        return begin;
+    }
 
-	public void setBegin(int begin) {
-		this.begin = begin;
-	}
+    public void setBegin(int begin) {
+        this.begin = begin;
+    }
 
-	public int getEnd() {
-		return end;
-	}
+    public int getEnd() {
+        return end;
+    }
 
-	public void setEnd(int end) {
-		this.end = end;
-	}
+    public void setEnd(int end) {
+        this.end = end;
+    }
 }
