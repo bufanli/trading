@@ -75,6 +75,9 @@ public class WaiPanController {
                         } else if ("AsubsidiaryofADM".equals(result.split("\r")[5].trim().replaceAll(" ", ""))) {//ADMIS
                             String json = DealAdmisPdfUtil.dealAdmis(result);
                             return new RestResponse<String>(RestResponse.SUCCESS_CODE, "操作成功", json);
+                        }else if(firstRow.startsWith("J.P. Morgan Securities plc")){
+                            String json = DealJpmorganPdfUtil.dealJpmorgan(result);
+                            return new RestResponse<String>(RestResponse.SUCCESS_CODE, "操作成功", json);
                         }
                     } else if (file[i].getOriginalFilename().contains(".xlsx")) {//excel
                         InputStream inp = file[i].getInputStream();
@@ -138,7 +141,7 @@ public class WaiPanController {
 
     public static void main(String[] args) throws Exception {
         System.out.println(new Date().getTime());
-        File file = new File("F:\\交易部\\期货公司报表解析\\整理\\ADMIS.pdf");
+        File file = new File("D:\\00_study\\05_for_guopeng\\reference\\jpmorgen.pdf");
         try {
             // 新建一个PDF解析器对象
             PDFParser parser = new PDFParser(new RandomAccessFile(file, "rw"));
@@ -152,7 +155,7 @@ public class WaiPanController {
             stripper.setSortByPosition(true); //sort设置为true 则按照行进行读取，默认是false
             // 从PDF文档对象中剥离文本
             String result = stripper.getText(pdfdocument);
-            FileWriter fileWriter = new FileWriter(new File("pdf.txt"));
+            FileWriter fileWriter = new FileWriter(new File("D:\\00_study\\05_for_guopeng\\reference\\pdf.txt"));
             fileWriter.write(result);
             fileWriter.flush();
             fileWriter.close();
