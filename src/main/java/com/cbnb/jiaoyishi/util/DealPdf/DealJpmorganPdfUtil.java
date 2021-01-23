@@ -37,10 +37,15 @@ public class DealJpmorganPdfUtil {
     private static String SELL= "Sell";
     private static String CCY_USD= "USD";
     private static String COMM = "Comm";
+    private static String TO = "TO:";
+    private static String DATE= "DATE:";
+    private static int MAX_WORDS_OF_PZHYNR= 5;
     private static int OTHERS= 0;
     private static int PRE_ENTERING = 1;
     private static int ENTERING_CJMX = 2;
-    private static int ENTERING_CCHZ = 3;
+    private static int ENTERED_CJMX = 3;
+    private static int ENTERING_CCHZ = 4;
+    private static int ENTERED_CCHZ = 5;
     private static int status = OTHERS;
     /**
      * deal jpmorgan pdf utility
@@ -49,7 +54,7 @@ public class DealJpmorganPdfUtil {
      */
     public static String dealJpmorgan(String str) {
         JSONObject jsonObject = new JSONObject();
-        String[] results = str.split("\r");
+        String[] results = str.split("\r\n");
         // analysis wfgsmc in max top 100 line
         String wfgsmc = "";
         String pzjynr= "";
@@ -58,9 +63,11 @@ public class DealJpmorganPdfUtil {
         List <Cchz> cchzes= new ArrayList<Cchz>();
         List <Zj> zjes= new ArrayList<Zj>();
         for (int i = 0;i < 100; i++){
+            // clear ' for json
+            results[i] = results[i].replace("'","“");
             // find wfgsmc
-            if (results[i].startsWith("TO:")){
-               wfgsmc = results[i].substring(results[i].indexOf("TO:"),results[i].indexOf("DATE:"));
+            if (results[i].startsWith(TO) ){
+               wfgsmc = results[i].substring(TO.length(),results[i].indexOf(DATE));
                // trim
                 wfgsmc = wfgsmc.trim();
                 break;
@@ -74,20 +81,26 @@ public class DealJpmorganPdfUtil {
                status = PRE_ENTERING;
                continue;
            }
+           if( (status == PRE_ENTERING) && (results[i].split(" ").length > MAX_WORDS_OF_PZHYNR) ){
+              status = OTHERS;
+              continue;
+           }
            if ( (status == PRE_ENTERING) && (!results[i].equals(SUMMARY)) ){
                status = ENTERING_CJMX;
-               pzjynr = results[i+1];
+               pzjynr = results[i];
                continue;
            }
             if ( (status == PRE_ENTERING) && (results[i].equals(SUMMARY)) ){
                status = ENTERING_CCHZ;
+               continue;
             }
             if ( (status == ENTERING_CJMX) && (results[i].startsWith(PROMPT))){
-               prompt = results[i].substring(results[i].indexOf(PROMPT));
+               prompt = results[i].substring(PROMPT.length());
                prompt = prompt.trim();
                continue;
             }
-           if ( (status == ENTERING_CJMX) && (Pattern.matches(cjmxHeaderPattern,results[i])) ){
+           if ( (status == ENTERING_CJMX || status == ENTERED_CJMX) && (Pattern.matches(cjmxHeaderPattern,results[i])) ){
+               status = ENTERED_CJMX;
               // this is cjmx line
                String[] items= results[i].split(" ");
                int processPosition = 0;
@@ -98,7 +111,7 @@ public class DealJpmorganPdfUtil {
                //trade type
                StringBuffer tradeTypeBuffer = new StringBuffer();
                for (;processPosition < items.length;processPosition++) {
-                   if (!items[processPosition].equals(BUY) || !items[processPosition].equals(SELL)) {
+                   if (!items[processPosition].equals(BUY) && !items[processPosition].equals(SELL)) {
                        tradeTypeBuffer.append(items[processPosition]);
                        tradeTypeBuffer.append(" ");
                    } else {
@@ -113,8 +126,8 @@ public class DealJpmorganPdfUtil {
                StringBuffer contractPriceBuffer= new StringBuffer();
                for (;processPosition < items.length;processPosition++) {
                    if (!items[processPosition].equals(CCY_USD)) {
-                       tradeTypeBuffer.append(items[processPosition]);
-                       tradeTypeBuffer.append(" ");
+                       contractPriceBuffer.append(items[processPosition]);
+                       contractPriceBuffer.append(" ");
                    } else {
                        break;
                    }
@@ -176,63 +189,80 @@ public class DealJpmorganPdfUtil {
                cjmx.setHz(null);
                cjmx.setBz(CCY_USD);
                cjmxes.add(cjmx);
+               continue;
             }
-            if ( (status == ENTERING_CJMX) && (!Pattern.matches(cjmxHeaderPattern,results[i])) ){
+            if ( (status == ENTERED_CJMX) && (!Pattern.matches(cjmxHeaderPattern,results[i])) ){
                 status = OTHERS;
+                continue;
             }
             // end of cjmx
             // start of cchz
-            if (status == ENTERING_CCHZ){
+            if (status == ENTERING_CCHZ || status == ENTERED_CCHZ){
                if (results[i].startsWith(COMM)){
                    continue;
-               }else if (results[i].startsWith(PAGE)){
+               }else if(results[i].startsWith(PAGE)) {
                    status = OTHERS;
                    continue;
                }else{
-                   //pzhynr
-                   String items[] = results[i].split(" ");
-                   int processPosition = 0;
-                   StringBuffer pzhynrBuffer = new StringBuffer();
-                   for (;processPosition < items.length;processPosition++) {
-                       if (!items[processPosition].equals(CCY_USD)) {
-                           pzhynrBuffer.append(items[processPosition]);
+                    status = ENTERED_CCHZ;
+                    //pzhynr
+                    String items[] = results[i].split(" ");
+                    int processPosition = 0;
+                    StringBuffer pzhynrBuffer = new StringBuffer();
+                    for (;processPosition < items.length;processPosition++) {
+                        if (!items[processPosition].equals(CCY_USD)) {
+                            pzhynrBuffer.append(items[processPosition]);
                            pzhynrBuffer.append(" ");
-                       } else {
-                           break;
-                       }
-                   }
-                   String pzhynr = pzhynrBuffer.toString();
-                   pzhynr.trim();
-                   String ccy = items[processPosition++];
-                   // net quantity
-                   String netQty = items[processPosition++];
-                   // net delta quantity
-                   String netDelQty = items[processPosition++];
-                   // undiscounted
-                   String undiscounted = items[processPosition++];
-                   // discounted
-                   String discounted = items[processPosition++];
-                   Cchz cchz = new Cchz();
-                   cchz.setQhgsmc(QHGSMC);
-                   cchz.setWsmc(wfgsmc);
-                   cchz.setQhgszh(null);
-                   cchz.setJys(null);
-                   cchz.setPzhynr(pzhynr);
-                   cchz.setHydqr(null);
-                   cchz.setBuy(null);
-                   cchz.setSell(null);
-                   cchz.setCjjj(null);
-                   cchz.setJsj(null);
-                   cchz.setCcyk(undiscounted);
-                   cchz.setHz(null);
-                   cchz.setJbbzj(null);
-                   cchz.setBz(ccy);
-                   cchzes.add(cchz);
+                        } else {
+                            break;
+                        }
+                    }
+                    String pzhynr = pzhynrBuffer.toString();
+                    pzhynr.trim();
+                    String ccy = items[processPosition++];
+                    // net quantity
+                    String netQty = items[processPosition++];
+                    // net delta quantity
+                    String netDelQty = items[processPosition++];
+                    // undiscounted
+                    String undiscounted = items[processPosition++];
+                    // discounted
+                    String discounted = items[processPosition++];
+                    Cchz cchz = new Cchz();
+                    cchz.setQhgsmc(QHGSMC);
+                    cchz.setWsmc(wfgsmc);
+                    cchz.setQhgszh(null);
+                    cchz.setJys(null);
+                    cchz.setPzhynr(pzhynr);
+                    cchz.setHydqr(null);
+                    cchz.setBuy(null);
+                    cchz.setSell(null);
+                    cchz.setCjjj(null);
+                    cchz.setJsj(null);
+                    cchz.setCcyk(undiscounted);
+                    cchz.setHz(null);
+                    cchz.setJbbzj(null);
+                    cchz.setBz(ccy);
+                    cchzes.add(cchz);
+                    continue;
                }
             }//end of CCHZ
+            if(results[i].startsWith(PAGE)){
+                status = OTHERS;
+                continue;
+            }
         }
         return "{'cjmx':" + cjmxes + ",'cchz':" + cchzes + ",'zj':" + zjes+ "}";
     }
+//    public static void main(String[] args) throws Exception {
+//        String test = "29-Dec-2020 85000BH-SP25K Fwd Sell 7,840.00 USD 7,834.00 USD 0.65 USD Exl. -1,000.00 -1,000.00 5,350.00 5,349.93";
+//        String cjmxHeaderPattern = "^\\d{2}-\\w{3}-\\d{4}.*";
+//        if(Pattern.matches(cjmxHeaderPattern,test)){
+//            System.out.println("matched");
+//        }else{
+//            System.out.println("not matched");
+//        }
+//    }
     public static void main(String[] args) throws Exception {
         System.out.println(new Date().getTime());
         File file = new File("D:\\00_study\\05_for_guopeng\\reference\\jpmorgen.pdf");
